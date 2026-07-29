@@ -6,6 +6,7 @@ const {
   updateTeam,
   deleteTeam,
   inviteMember,
+  getPendingInvites,
   removeMember,
   leaveTeam,
   transferLeadership,
@@ -36,6 +37,9 @@ router.delete("/:id", protect, authorize("participant"), deleteTeam);
 
 // POST /api/teams/:id/invite — Team leader invites member by email (Participants only)
 router.post("/:id/invite", protect, authorize("participant"), inviteMember);
+
+// GET /api/teams/:id/invites — Team leader views pending invites
+router.get("/:id/invites", protect, authorize("participant"), getPendingInvites);
 
 // DELETE /api/teams/:id/members/:userId — Team leader removes member (Participants only)
 router.delete("/:id/members/:userId", protect, authorize("participant"), removeMember);

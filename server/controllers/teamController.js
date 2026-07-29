@@ -1,7 +1,13 @@
-const Team = require("../models/Team");
-const User = require("../models/User");
-const Submission = require("../models/Submission");
+const crypto         = require("crypto");
+const Team           = require("../models/Team");
+const User           = require("../models/User");
+const Submission     = require("../models/Submission");
+const TeamInvitation = require("../models/TeamInvitation");
+const sendEmail      = require("../utils/sendEmail");
+const { buildInviteEmail } = require("./invitationController");
 const { isValidObjectId, isValidEmail } = require("../utils/validators");
+
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const createTeam = async (req, res) => {
   const { name, hackathonId } = req.body;
@@ -84,23 +90,91 @@ const inviteMember = async (req, res) => {
     return res.status(400).json({ message: "Please provide a valid email address to invite." });
   }
 
-  const team = await Team.findById(req.params.id);
+  const team = await Team.findById(req.params.id).populate("hackathon", "title");
   if (!team) return res.status(404).json({ message: "Team not found" });
 
-  if (team.leader.toString() !== req.user._id.toString()) {
+  if (team.leader.toString() !== req.user._id.toString() && req.user.role !== "admin") {
     return res.status(403).json({ message: "Only the team leader can invite members." });
   }
 
-  const userToInvite = await User.findOne({ email: email.toLowerCase().trim() });
-  if (!userToInvite) return res.status(404).json({ message: "No user found with that email address." });
+  const cleanEmail = email.toLowerCase().trim();
 
-  if (team.members.includes(userToInvite._id)) {
+  // If user already exists and is already in team, reject
+  const existingUser = await User.findOne({ email: cleanEmail });
+  if (existingUser && team.members.includes(existingUser._id)) {
     return res.status(400).json({ message: "User is already a member of this team." });
   }
 
-  team.members.push(userToInvite._id);
-  await team.save();
-  res.json(team);
+  // If an active pending invite exists, replace it so a fresh invite email can be sent
+  await TeamInvitation.deleteMany({
+    team: team._id,
+    email: cleanEmail,
+    status: "pending",
+  });
+
+  // Generate cryptographically secure token
+  const token = crypto.randomBytes(32).toString("hex");
+
+  // Invitation expires in 7 days
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  await TeamInvitation.create({
+    team: team._id,
+    email: cleanEmail,
+    invitedBy: req.user._id,
+    token,
+    expiresAt,
+  });
+
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const inviteUrl = `${clientUrl}/invite/${token}`;
+
+  const html = buildInviteEmail({
+    teamName: team.name,
+    hackathonTitle: team.hackathon?.title || "a Hackathon",
+    inviterName: req.user.name || "Your team leader",
+    inviteUrl,
+  });
+
+  let emailSent = false;
+  let emailError = "";
+  try {
+    await sendEmail({
+      to: cleanEmail,
+      subject: `Join team "${team.name}" on AVISHKAR!`,
+      html,
+    });
+    emailSent = true;
+  } catch (err) {
+    emailError = err.message;
+    console.error("Failed to send invitation email:", err);
+  }
+
+  if (emailSent) {
+    res.json({
+      message: `Invitation email sent successfully to ${cleanEmail}!`,
+      inviteUrl,
+    });
+  } else {
+    res.status(500).json({
+      message: `Failed to send email to ${cleanEmail}: ${emailError || "SMTP connection issue"}. Check server logs.`,
+    });
+  }
+};
+
+const getPendingInvites = async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: "Invalid team ID format." });
+  }
+
+  const invites = await TeamInvitation.find({
+    team: req.params.id,
+    status: "pending",
+    expiresAt: { $gt: new Date() },
+  }).select("email createdAt expiresAt");
+
+  res.json(invites);
 };
 
 const removeMember = async (req, res) => {
@@ -175,7 +249,7 @@ const searchTeams = async (req, res) => {
   if (!query || !query.trim()) return res.json([]);
 
   const teams = await Team.find({
-    name: { $regex: query.trim(), $options: "i" },
+    name: { $regex: escapeRegex(query.trim()), $options: "i" },
   })
     .populate("members", "name email")
     .populate("leader", "name email")
@@ -190,6 +264,7 @@ module.exports = {
   updateTeam,
   deleteTeam,
   inviteMember,
+  getPendingInvites,
   removeMember,
   leaveTeam,
   transferLeadership,
