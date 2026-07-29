@@ -1,10 +1,21 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 const GoogleAuthButton = ({ onSuccess, onError, role = "participant", label = "Continue with Google" }) => {
   const [loading, setLoading] = useState(false);
   const [gisError, setGisError] = useState(false);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
   const googleBtnRef = useRef(null);
+
+  // Guard flag — prevents calling initialize() more than once (React StrictMode double-mounts in dev)
+  const initializedRef = useRef(false);
+
+  // Stable refs so the useEffect can safely run with [] deps without stale closures
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+  const roleRef = useRef(role);
+  useEffect(() => { onSuccessRef.current = onSuccess; }, [onSuccess]);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  useEffect(() => { roleRef.current = role; }, [role]);
 
   useEffect(() => {
     if (!clientId) return;
@@ -13,40 +24,47 @@ const GoogleAuthButton = ({ onSuccess, onError, role = "participant", label = "C
     let script = document.getElementById(scriptId);
 
     const initGoogle = () => {
-      if (window.google?.accounts?.id) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: (response) => {
-              try {
-                // SECURITY FIX: Send raw signed Google ID Token (credential) to backend for server-side verification.
-                // Do NOT decode payload client-side or trust unverified request body fields.
-                onSuccess({
-                  credential: response.credential,
-                  role,
-                });
-              } catch (err) {
-                if (onError) onError(err);
-              }
-            },
-            error_callback: () => {
-              setGisError(true);
-            },
-          });
+      if (!window.google?.accounts?.id) return;
 
-          if (googleBtnRef.current) {
-            googleBtnRef.current.innerHTML = "";
-            window.google.accounts.id.renderButton(googleBtnRef.current, {
-              theme: "outline",
-              size: "large",
-              width: "100%",
-              text: "continue_with",
-              shape: "rectangular",
-            });
-          }
-        } catch {
-          setGisError(true);
+      // Guard: skip if already initialized to avoid "called multiple times" warning
+      if (initializedRef.current) return;
+      initializedRef.current = true;
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            try {
+              // SECURITY FIX: Send raw signed Google ID Token (credential) to backend for server-side verification.
+              // Do NOT decode payload client-side or trust unverified request body fields.
+              onSuccessRef.current({
+                credential: response.credential,
+                role: roleRef.current,
+              });
+            } catch (err) {
+              if (onErrorRef.current) onErrorRef.current(err);
+            }
+          },
+          error_callback: () => {
+            setGisError(true);
+          },
+        });
+
+        if (googleBtnRef.current) {
+          googleBtnRef.current.innerHTML = "";
+          // Google renderButton requires a numeric pixel width — NOT a percentage string
+          // We read the container's actual rendered pixel width for a responsive feel
+          const containerWidth = googleBtnRef.current.offsetWidth || 360;
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline",
+            size: "large",
+            width: containerWidth,
+            text: "continue_with",
+            shape: "rectangular",
+          });
         }
+      } catch {
+        setGisError(true);
       }
     };
 
@@ -62,16 +80,18 @@ const GoogleAuthButton = ({ onSuccess, onError, role = "participant", label = "C
     } else if (window.google?.accounts?.id) {
       initGoogle();
     }
-  }, [clientId, role, onSuccess, onError]);
+
+    // Run only once on mount — stable refs handle callback/role changes without re-init
+  }, [clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDemoGoogleClick = () => {
     setLoading(true);
     setTimeout(() => {
-      onSuccess({
+      onSuccessRef.current({
         email: "dishant@avishkar.dev",
         name: "Dishant Jhava (Google)",
         picture: "https://lh3.googleusercontent.com/a/default-user",
-        role,
+        role: roleRef.current,
       });
       setLoading(false);
     }, 500);
@@ -116,3 +136,4 @@ const GoogleAuthButton = ({ onSuccess, onError, role = "participant", label = "C
 };
 
 export default GoogleAuthButton;
+
