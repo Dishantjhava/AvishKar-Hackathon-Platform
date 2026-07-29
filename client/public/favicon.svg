@@ -1,24 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- Sleek Solid Black Backdrop -->
-    <rect id="bg" width="512" height="512" rx="128" fill="#0B0E14" />
-    
-    <!-- AvishKar Signature Pink Gradient for colon dot -->
+    <!-- AvishKar Signature Pink Gradient for colon dots -->
     <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FF2A7A" />
       <stop offset="100%" stop-color="#E02567" />
     </linearGradient>
   </defs>
 
-  <!-- Background Card -->
-  <rect width="512" height="512" rx="128" fill="#0B0E14" />
-  
-  <!-- Outer Subtle Pink Border Frame for High Contrast -->
-  <rect width="488" height="488" x="12" y="12" rx="116" fill="none" stroke="#E02567" stroke-width="12" />
+  <!-- Clean Solid Black Background Card without border -->
+  <rect width="512" height="512" rx="96" fill="#0B0E14" />
 
-  <!-- Ultra-Bold Crisp White/Black 'A' Lettermark -->
-  <text x="210" y="370" font-family="Outfit, Inter, Arial, sans-serif" font-weight="900" font-size="340" fill="#FFFFFF" text-anchor="middle">A</text>
+  <!-- Full-Size Bold White 'A' Lettermark -->
+  <text x="195" y="425" font-family="Outfit, Inter, Arial, sans-serif" font-weight="900" font-size="475" fill="#FFFFFF" text-anchor="middle">A</text>
 
-  <!-- Signature AvishKar Pink Colon Symbol Dot ':' -->
-  <circle cx="380" cy="335" r="32" fill="url(#pinkGrad)" />
+  <!-- Signature AvishKar Pink Colon Symbol (Two Dots ':') -->
+  <circle cx="415" cy="215" r="36" fill="url(#pinkGrad)" />
+  <circle cx="415" cy="355" r="36" fill="url(#pinkGrad)" />
 </svg>
