@@ -15,6 +15,7 @@ const registrationRoutes = require("./routes/registrationRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes");
+const invitationRoutes = require("./routes/invitationRoutes");
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/registrations", registrationRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/invitations", invitationRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Server is running" });
@@ -48,16 +50,11 @@ app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error("Server failed to start:", err.message);
-    process.exit(1);
-  }
+const startServer = () => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    connectDB();
+  });
 };
 
 startServer();
