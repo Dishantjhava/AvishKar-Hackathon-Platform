@@ -135,7 +135,7 @@ MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/avishkar?retry
 JWT_SECRET=your_strong_random_secret_here
 JWT_EXPIRE=7d
 
-CLIENT_URL=http://localhost:5173
+CLIENT_URL=https://avishkarr.vercel.app
 GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
 
 # Gmail SMTP Email Invitation Settings
@@ -149,7 +149,7 @@ EMAIL_FROM="AVISHKAR Platform <your_gmail@gmail.com>"
 Create a `.env` file in the `client` directory:
 
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://avishkar-backend.onrender.com
 VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
 ```
 
@@ -178,8 +178,8 @@ Run both client and server concurrently from the root directory:
 npm run dev
 ```
 
-- **Frontend Application**: `http://localhost:5173`
-- **Backend API**: `http://localhost:5000`
+- **Frontend Application**: `https://avishkarr.vercel.app`
+- **Backend API**: `https://avishkar-backend.onrender.com`
 
 ---
 
