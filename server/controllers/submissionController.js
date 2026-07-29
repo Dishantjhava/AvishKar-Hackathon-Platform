@@ -2,6 +2,8 @@ const Submission = require("../models/Submission");
 const Team = require("../models/Team");
 const { isValidObjectId, isValidUrl } = require("../utils/validators");
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const createSubmission = async (req, res) => {
   const { hackathonId, teamId, projectName, githubRepo, liveDemoUrl, ...rest } = req.body;
 
@@ -72,9 +74,18 @@ const getSubmissionsByHackathon = async (req, res) => {
 };
 
 const getMySubmission = async (req, res) => {
-  const team = await Team.findOne({ members: req.user._id });
-  if (!team) return res.json(null);
-  const sub = await Submission.findOne({ team: team._id });
+  // Find ALL teams the user belongs to
+  const teams = await Team.find({ members: req.user._id });
+  if (!teams || teams.length === 0) return res.json(null);
+
+  const teamIds = teams.map((t) => t._id);
+
+  // Find the most recent submission across any of their teams
+  const sub = await Submission.findOne({ team: { $in: teamIds } })
+    .sort({ createdAt: -1 })
+    .populate("team", "name members leader")
+    .populate("hackathon", "title theme mode status");
+
   res.json(sub || null);
 };
 
@@ -130,8 +141,8 @@ const searchSubmissions = async (req, res) => {
   const term = query.trim();
   const submissions = await Submission.find({
     $or: [
-      { projectName: { $regex: term, $options: "i" } },
-      { techStack: { $regex: term, $options: "i" } },
+      { projectName: { $regex: escapeRegex(term), $options: "i" } },
+      { techStack: { $regex: escapeRegex(term), $options: "i" } },
     ],
   })
     .populate("team", "name members")

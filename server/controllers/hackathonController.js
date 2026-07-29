@@ -2,6 +2,9 @@ const Hackathon = require("../models/Hackathon");
 const User = require("../models/User");
 const { isValidObjectId, validateHackathonDates } = require("../utils/validators");
 
+// Escape special regex characters to prevent MongoServerError on invalid patterns
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const getAllHackathons = async (req, res) => {
   const { mode, status, organizerId, search, theme } = req.query;
   const filter = {};
@@ -15,8 +18,8 @@ const getAllHackathons = async (req, res) => {
     filter.organizer = organizerId;
   }
 
-  if (search) filter.title = { $regex: search, $options: "i" };
-  if (theme) filter.theme = { $regex: theme, $options: "i" };
+  if (search) filter.title = { $regex: escapeRegex(search.trim()), $options: "i" };
+  if (theme) filter.theme = { $regex: escapeRegex(theme.trim()), $options: "i" };
 
   const hackathons = await Hackathon.find(filter)
     .populate("organizer", "name email")
