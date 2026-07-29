@@ -80,10 +80,10 @@
 ## 🛠️ Tech Stack
 
 ### **Frontend**
-- **Framework**: React 18 + Vite 8
+- **Framework**: React 19 + Vite 8
 - **Styling**: Vanilla CSS Design Tokens, Custom Themes (Light/Dark Mode), Tailwind Utilities
 - **Typography**: `Outfit` (Headings/Display), `Inter` (Body Text)
-- **Routing**: React Router v6
+- **Routing**: React Router v7
 - **State & Fetching**: Custom `useFetch` & `useAuth` Hooks, Axios
 
 ### **Backend**
@@ -126,16 +126,17 @@ npm install
 
 ### ⚙️ 2. Environment Setup
 
-Create a `.env` file in the `server` directory using `server/.env.example` as a template:
+Create a `.env` file in the `server` directory:
 
 ```env
 PORT=5000
 NODE_ENV=development
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/avishkar?retryWrites=true&w=majority
-JWT_SECRET=avishkar_super_secret_key_change_in_prod
+JWT_SECRET=your_strong_random_secret_here
 JWT_EXPIRE=7d
 
 CLIENT_URL=http://localhost:5173
+GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
 
 # Gmail SMTP Email Invitation Settings
 EMAIL_HOST=smtp.gmail.com
@@ -143,6 +144,13 @@ EMAIL_PORT=465
 EMAIL_USER=your_gmail@gmail.com
 EMAIL_PASS=your_16_char_app_password
 EMAIL_FROM="AVISHKAR Platform <your_gmail@gmail.com>"
+```
+
+Create a `.env` file in the `client` directory:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
 ```
 
 ---
@@ -189,7 +197,7 @@ npm run dev
 ## 📡 API Endpoints Overview
 
 ### 🔑 Authentication (`/api/auth`)
-- `POST /api/auth/register` — Register a new account
+- `POST /api/auth/signup` — Register a new account
 - `POST /api/auth/login` — Sign in with email & password
 - `POST /api/auth/google` — Authenticate via Google OAuth
 
