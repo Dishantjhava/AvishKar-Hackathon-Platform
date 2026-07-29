@@ -19,21 +19,10 @@ const GoogleAuthButton = ({ onSuccess, onError, role = "participant", label = "C
             client_id: clientId,
             callback: (response) => {
               try {
-                const base64Url = response.credential.split(".")[1];
-                const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-                const jsonPayload = decodeURIComponent(
-                  atob(base64)
-                    .split("")
-                    .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-                    .join("")
-                );
-                const payload = JSON.parse(jsonPayload);
-
+                // SECURITY FIX: Send raw signed Google ID Token (credential) to backend for server-side verification.
+                // Do NOT decode payload client-side or trust unverified request body fields.
                 onSuccess({
-                  email: payload.email,
-                  name: payload.name,
-                  picture: payload.picture,
-                  googleId: payload.sub,
+                  credential: response.credential,
                   role,
                 });
               } catch (err) {

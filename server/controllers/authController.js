@@ -92,17 +92,52 @@ const login = async (req, res) => {
   }
 };
 
+const { OAuth2Client } = require("google-auth-library");
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+/**
+ * @desc    Google OAuth Sign-In / Registration Handler
+ * @route   POST /api/auth/google
+ * @access  Public
+ * 
+ * SECURITY AUDIT FIX:
+ * We do NOT trust raw body attributes (email, name, googleId) directly from request body.
+ * The client MUST send Google's cryptographically signed ID token (`credential`).
+ * We verify the token signature & audience against Google servers using `OAuth2Client.verifyIdToken()`.
+ * Identity details (email, name, picture) are extracted ONLY from the verified token payload.
+ */
 const googleAuth = async (req, res) => {
   try {
-    const { email, name, picture, role } = req.body;
+    const { credential, role } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: "Google authentication token (credential) is required." });
+    }
+
+    // Verify the token's cryptographic signature & audience with Google OAuth2Client
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (verifyError) {
+      console.error("❌ Google Token Verification Error:", verifyError.message);
+      return res.status(401).json({ message: "Invalid or expired Google authentication token." });
+    }
+
+    // Extract identity fields strictly from verified Google payload
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
 
     if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ message: "Valid Google email address is required." });
+      return res.status(400).json({ message: "Google account does not provide a valid email address." });
     }
 
     let user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
+      // Prevent privilege escalation: sanitize any attempt to claim 'admin' role
       const allowedGoogleRoles = ["participant", "organizer", "judge"];
       const targetRole = allowedGoogleRoles.includes(role) ? role : "participant";
 
@@ -117,7 +152,7 @@ const googleAuth = async (req, res) => {
     }
 
     if (user.isBlocked) {
-      return res.status(403).json({ message: "Your account has been blocked." });
+      return res.status(403).json({ message: "Your account has been blocked by an administrator." });
     }
 
     const token = generateToken(user._id);
