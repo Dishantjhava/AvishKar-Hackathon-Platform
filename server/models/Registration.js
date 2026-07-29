@@ -4,6 +4,7 @@ const registrationSchema = new mongoose.Schema(
   {
     participant: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     hackathon: { type: mongoose.Schema.Types.ObjectId, ref: "Hackathon", required: true },
+    team: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
   },
   { timestamps: true }

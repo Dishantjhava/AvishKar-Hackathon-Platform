@@ -103,7 +103,6 @@ const googleAuth = async (req, res) => {
     let user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
-      // Admin role can't be self-assigned via Google auth either
       const allowedGoogleRoles = ["participant", "organizer", "judge"];
       const targetRole = allowedGoogleRoles.includes(role) ? role : "participant";
 
@@ -134,6 +133,7 @@ const googleAuth = async (req, res) => {
       token,
     });
   } catch (error) {
+    console.error("❌ Google Auth Error:", error);
     res.status(500).json({ message: error.message || "Google authentication failed. Please try again." });
   }
 };

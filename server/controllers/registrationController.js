@@ -1,5 +1,7 @@
 const Registration = require("../models/Registration");
 const Hackathon = require("../models/Hackathon");
+const Team = require("../models/Team");
+const User = require("../models/User");
 const { isValidObjectId } = require("../utils/validators");
 
 const registerForHackathon = async (req, res) => {
