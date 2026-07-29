@@ -32,6 +32,7 @@ const AppRoutes = () => {
         <Route path="/hackathons/:id"           element={<HackathonDetails />} />
         <Route path="/login"                    element={<Login />} />
         <Route path="/signup"                   element={<Signup />} />
+        <Route path="/leaderboard"              element={<Leaderboard />} />
         <Route path="/leaderboard/:hackathonId" element={<Leaderboard />} />
         <Route path="/invite/:token"            element={<AcceptInvite />} />
       </Route>
