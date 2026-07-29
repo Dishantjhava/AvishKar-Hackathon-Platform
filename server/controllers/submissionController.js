@@ -76,17 +76,17 @@ const getSubmissionsByHackathon = async (req, res) => {
 const getMySubmission = async (req, res) => {
   // Find ALL teams the user belongs to
   const teams = await Team.find({ members: req.user._id });
-  if (!teams || teams.length === 0) return res.json(null);
+  if (!teams || teams.length === 0) return res.json([]);
 
   const teamIds = teams.map((t) => t._id);
 
-  // Find the most recent submission across any of their teams
-  const sub = await Submission.findOne({ team: { $in: teamIds } })
+  // Find ALL submissions across any of their teams
+  const subs = await Submission.find({ team: { $in: teamIds } })
     .sort({ createdAt: -1 })
     .populate("team", "name members leader")
     .populate("hackathon", "title theme mode status");
 
-  res.json(sub || null);
+  res.json(subs || []);
 };
 
 const updateSubmission = async (req, res) => {

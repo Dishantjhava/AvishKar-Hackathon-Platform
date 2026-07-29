@@ -5,11 +5,15 @@ const { isValidObjectId } = require("../utils/validators");
 const getLeaderboard = async (req, res) => {
   const { hackathonId } = req.params;
 
-  if (!isValidObjectId(hackathonId)) {
-    return res.status(400).json({ message: "Invalid hackathon ID format." });
+  let query = {};
+  if (hackathonId) {
+    if (!isValidObjectId(hackathonId)) {
+      return res.status(400).json({ message: "Invalid hackathon ID format." });
+    }
+    query = { hackathon: hackathonId };
   }
 
-  const submissions = await Submission.find({ hackathon: hackathonId }).populate("team", "name");
+  const submissions = await Submission.find(query).populate("team", "name");
 
   const entries = await Promise.all(
     submissions.map(async (sub) => {
