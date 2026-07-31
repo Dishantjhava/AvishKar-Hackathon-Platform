@@ -13,9 +13,7 @@ export const ThemeProvider = ({ children }) => {
     if (saved === "dark" || saved === "light") {
       return saved;
     }
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
+    return "light";
   });
 
   useEffect(() => {
