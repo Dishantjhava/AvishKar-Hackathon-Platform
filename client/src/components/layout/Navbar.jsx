@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import Button from "../common/Button";
 import useAuth from "../../hooks/useAuth";
 import useTheme from "../../hooks/useTheme";
+import TextType from "../common/TextType";
 
 const Navbar = () => {
   const { isAuth, user, role, logout } = useAuth();
@@ -164,6 +165,21 @@ const Navbar = () => {
           </div>
         ) : (
           <>
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-[var(--pink-tint)] text-[var(--primary-pink)] border border-pink-200 dark:border-pink-900/30 mr-1 min-w-[148px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-pink)] animate-ping opacity-75 shrink-0" />
+              <TextType
+                text={["New to AvishKar?", "Join in 30 seconds"]}
+                as="span"
+                typingSpeed={45}
+                pauseDuration={1800}
+                deletingSpeed={25}
+                showCursor={true}
+                cursorCharacter="|"
+                loop={true}
+                className="text-xs font-medium"
+                textColors={["var(--primary-pink)"]}
+              />
+            </span>
             <Link
               to="/login"
               className="text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 transition-colors duration-150"
